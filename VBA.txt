@@ -1,0 +1,31 @@
+Public Function Prepare()
+Dim strPattern As String: strPattern = "[^a-zA-Z0-9_ ]" 'The regex pattern to find special characters
+Dim strReplace As String: strReplace = "" 'The replacement for the special characters
+Set regEx = CreateObject("vbscript.regexp") 'Initialize the regex object
+
+Set wb = ThisWorkbook
+Set wbd = wb.Sheets("Data")
+Set wbs = wb.Sheets("RawData")
+
+' Configure the regex object
+With regEx
+    .Global = True
+    .MultiLine = True
+    .IgnoreCase = False
+    .Pattern = strPattern
+End With
+
+Set Rng = wbs.Range(wbs.Rows(1).Find("Individual Rating").Offset(1, 0), wbs.Cells(wbs.Cells(1).CurrentRegion.Rows.Count, wbs.Rows(1).Find("Individual Rating").Column))
+For Each cell In Rng
+cell.Value = regEx.Replace(cell, strReplace)
+Next cell
+
+if wbs.Cells(1).CurrentRegion.Rows.Count > 2 then
+wbs.Range(wbs.Rows(1).Find("Product Header").Offset(1, 0), wbs.Cells(wbs.Cells(1).CurrentRegion.Rows.Count, wbs.Rows(1).Find("Product Rating").Column)).FillDown
+end if
+wbs.Range(wbs.Cells(2, 1), wbs.Cells(wbs.Cells(1).CurrentRegion.Rows.Count, wbs.Cells(1).CurrentRegion.Columns.Count)).Copy
+wbd.Cells(wbd.Cells(1).CurrentRegion.Rows.Count + 1, 1).PasteSpecial xlValues
+wbd.Cells.WrapText = False
+Rng.EntireRow.Delete
+wb.Save
+End Function
